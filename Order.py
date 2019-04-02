@@ -7,7 +7,7 @@ import io
 import unicodecsv
 import os
 
-apikey = ""
+apikey = 
 
 def getOrderList():
     url = "https://oak-partnership.co.uk/api/Orders/orders/{IncludeOnlyActiveOrders}"
@@ -148,6 +148,7 @@ def getItemPrice(order):
     order_length = range(len(order))
     item_cost = []
     item_flags = []
+    isTPMS = False
 
     ordercount = 0
 
@@ -181,7 +182,24 @@ def getItemPrice(order):
     print "Order is in Currency: " + str(isCurrency)
     print str(ordercount) + " orders found!"
 
+    
+    for i in range(len(order)):
+        if "tpmsProductCode" in order[i] and isCurrency == True:
+            tpmscode = order[i].split(":")
+            if tpmscode[1] != " ":
+                print "TPMS Found"
+                isTPMS = True
+        if "isTPMS?" in order[i] and isCurrency == True and isTPMS == True:
+            order[i] = "isTPMS?: Yes"
+        elif "isCON?" in order[i] and isTPMS == False and isCurrency == True:
+            order[i] = "isCON?: Yes"
+        elif "isDSP?" in order[i] and isCurrency == False and isPoints == True:
+            order[i] = "isDSP?: Yes"
+            
+
+    
     for x in order_length:
+
         if "pointsSpent" in order[x]:
             print "Point found!"
             print " "
@@ -224,6 +242,11 @@ def GetIndividualOrders(order_number):
     for i in range(len(single_order)):
         if "pointsSpent" in single_order[i] and sterling_object == False:
             single_order.insert(i,"currencySpent:0")
+            single_order.insert(i+4,"isDSP?: ")
+            single_order.insert(i+4,"isCON?: ")
+            single_order.insert(i+4,"isTPMS?: ")
+
+            
             sterling_object = True
 
 
@@ -235,7 +258,7 @@ def getOrderAmount():
 def getEveryOrder():
     print 'Getting Oak Partnership Orders...'
     amount = getOrderAmount()
-    for x in range(40):
+    for x in range(amount):
         print str(x) + ' Out of: ' +  str(amount)
         removeTrash(getMonthsOrders(x))
 
@@ -255,7 +278,7 @@ def getMonthsOrders(i):
     current  = str(current).split(",")
     orderno = str(current[7]).split(" ")
     date = str(current[3]).split(" ")
-    if datestring != date[2]:
+    if datestring in date[2]:
         print orderno[2]
         orderitem = getOrder(str(orderno[2]))
     return orderitem
@@ -296,7 +319,7 @@ def GetJSON():
         current  = str(current).split(",")
         orderno = current[7].split(" ")
         date = str(current[3]).split(" ")
-        if '2019-02' != date[2]:
+        if '2019-02' in date[2]:
             amount += 1
             order_list.append(orderno[2])
 
